@@ -13,6 +13,10 @@ ports_description:
   80/tcp: InkyPi web UI and firmware packed-frame downloads
 webui: http://[HOST]:[PORT:80]/
 watchdog: tcp://[HOST]:[PORT:80]
+ingress: true
+ingress_port: 80
+panel_icon: mdi:image-frame
+panel_title: InkyPi NeoFrame
 backup: cold
 options: {}
 schema: {}

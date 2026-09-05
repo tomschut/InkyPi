@@ -6,9 +6,9 @@ This add-on currently supports **amd64 (x86-64)** HAOS. Supervisor builds InkyPi
 
 1. In Home Assistant, open **Settings → Add-ons → Add-on store** (called **Settings → Apps → App store** on newer versions).
 2. Open the **⋮** menu (top right) → **Repositories**.
-3. Add `https://github.com/tomschut/inkypi-neoframe` and click **Add**, then close the dialog. The store reloads; if the new add-on doesn't appear, reload the page.
+3. Add `https://github.com/tomschut/InkyPi` and click **Add**, then close the dialog. The store reloads; if the new add-on doesn't appear, reload the page.
 4. Find **InkyPi NeoFrame** in the store, choose **Install**, then **Start**. Enable **Start on boot** and, optionally, **Watchdog**.
-5. Select **Open Web UI**, or visit `http://<HAOS-IP>:8084/`. Create your image content and playlists in InkyPi.
+5. Select **Open Web UI** (or find **InkyPi NeoFrame** in the sidebar — Ingress is enabled, so it's added automatically; toggle **Show in sidebar** on the add-on's Info page to hide it), or visit `http://<HAOS-IP>:8084/`. Create your image content and playlists in InkyPi.
 6. Set the Project 1 firmware's `image_url` to `http://<HAOS-IP>:8084/api/current_frame`.
 
 The firmware must support the packed Spectra-6 format. The first successful render makes a 960000-byte frame available. `/api/current_image` remains a PNG. If port 8084 is already used on HAOS, change the host port in the add-on's Network settings and use that port in the firmware URL.
@@ -23,7 +23,7 @@ Device settings, playlists, uploaded images, the current PNG/BIN and API keys li
 
 Repository installs update like any other add-on: **Check for updates** in the store, then **Update** on the add-on's page. For a manual/local install, replace the add-on folder and use **Rebuild** from its menu instead. Either way `/data` is preserved — the startup script seeds defaults only when a persistent file or image directory does not yet exist.
 
-The web UI and firmware endpoint are directly available on the configured LAN port and have no Home Assistant login protection. Keep the port on your trusted LAN. Ingress is not enabled because upstream uses root-relative URLs.
+The web UI is reachable both through Home Assistant's sidebar (Ingress, authenticated via your HA login) and directly on the configured LAN port (no HA login protection there — keep that port on your trusted LAN). The firmware's `/api/current_frame` polling always uses the direct port; it can't authenticate through Ingress. A small WSGI middleware (`src/utils/ingress_proxy.py`) rewrites InkyPi's root-relative `url_for()` links using Supervisor's `X-Ingress-Path` header so pages and assets resolve correctly under the sidebar panel.
 
 ## Scope and verification
 

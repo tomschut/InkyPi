@@ -20,6 +20,7 @@ import logging
 import threading
 import argparse
 from utils.app_utils import generate_startup_image
+from utils.ingress_proxy import IngressPathMiddleware
 from flask import Flask, request, send_from_directory
 from werkzeug.serving import is_running_from_reloader
 from config import Config
@@ -55,6 +56,7 @@ else:
     logger.info("Starting InkyPi in PRODUCTION mode on port 80")
 logging.getLogger('waitress.queue').setLevel(logging.ERROR)
 app = Flask(__name__)
+app.wsgi_app = IngressPathMiddleware(app.wsgi_app)
 template_dirs = [
    os.path.join(os.path.dirname(__file__), "templates"),    # Default template folder
    os.path.join(os.path.dirname(__file__), "plugins"),      # Plugin templates

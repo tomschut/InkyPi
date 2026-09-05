@@ -1,0 +1,7 @@
+.reference
+.venv
+.git
+artifacts
+dist
+__pycache__
+inkypi_neoframe

@@ -1,0 +1,13 @@
+services:
+  inkypi:
+    build: .
+    platform: linux/amd64
+    ports:
+      - "8084:80"
+    volumes:
+      - config:/app/src/config
+      - images:/app/src/static/images
+    restart: unless-stopped
+volumes:
+  config:
+  images:

@@ -26,6 +26,7 @@ from config import Config
 from display.display_manager import DisplayManager
 from refresh_task import RefreshTask
 from blueprints.main import main_bp
+from blueprints.frame import frame_bp
 from blueprints.settings import settings_bp
 from blueprints.plugin import plugin_bp
 from blueprints.playlist import playlist_bp
@@ -76,6 +77,7 @@ app.config['MAX_FORM_PARTS'] = 10_000
 
 # Register Blueprints
 app.register_blueprint(main_bp)
+app.register_blueprint(frame_bp)
 app.register_blueprint(settings_bp)
 app.register_blueprint(plugin_bp)
 app.register_blueprint(playlist_bp)

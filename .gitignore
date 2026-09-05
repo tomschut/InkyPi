@@ -172,3 +172,14 @@ mock_display_output/
 # Static Files added by install/update_vendors.sh
 /src/static/scripts/
 /src/static/styles/
+
+# NeoFrame: pinned reference checkouts for tests, test artifacts, and the
+# runtime device config seeded from device.json at container build time
+.reference/
+artifacts/
+/src/config/device.json
+# ...but the HAOS offline-install archive is a deliberately committed artifact
+# (a negated file rule alone won't work: git won't descend into an ignored dir).
+!/dist/
+/dist/*
+!dist/inkypi-neoframe-haos.tar.gz

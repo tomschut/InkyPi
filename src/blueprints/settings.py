@@ -69,6 +69,8 @@ def save_settings():
         }
         if "inky_saturation" in form_data:
             settings["image_settings"]["inky_saturation"] = float(form_data.get("inky_saturation", "0.5"))
+        if "panelRotation" in form_data:
+            settings["panel_rotation"] = int(form_data.get("panelRotation"))
         device_config.update_config(settings)
 
         if plugin_cycle_interval_seconds != previous_interval_seconds:

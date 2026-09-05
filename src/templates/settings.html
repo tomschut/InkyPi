@@ -146,6 +146,15 @@
                         </label>
                     </div>
                 </div>
+                {% if device_settings.display_type == "neoframe" %}
+                <div class="form-group nowrap">
+                    <label for="panelRotation" class="form-label">Panel Rotation:</label>
+                    <select id="panelRotation" name="panelRotation" class="form-input">
+                        <option value="90" {% if device_settings.panel_rotation == 90 %}selected{% endif %}>90&deg; clockwise</option>
+                        <option value="270" {% if device_settings.panel_rotation == 270 %}selected{% endif %}>90&deg; counter-clockwise</option>
+                    </select>
+                </div>
+                {% endif %}
                 <div class="form-group">
                     <!-- Timezone Dropdown -->
                     <div class="form-group nowrap">

@@ -1,5 +1,7 @@
 # InkyPi 
 
+> This fork adds a `neoframe` display type and a Home Assistant OS add-on for the [NeoFrame](../neoframe) panel — see [NEOFRAME.md](NEOFRAME.md).
+
 <img src="./docs/images/inky_clock.jpg" />
 
 

@@ -62,6 +62,11 @@
         <header class="header">
             <h1>{{ config.name }}</h1>
             <button class="settings-button dark-mode-toggle" title="Toggle Dark Mode" aria-label="Toggle Dark Mode"></button>
+            {% if request.environ.get('HTTP_X_INGRESS_PATH') %}
+            <button class="settings-button" title="Reload page" aria-label="Reload page" onclick="location.reload()">
+                <span style="font-size: 20px;">🔄</span>
+            </button>
+            {% endif %}
             <a href="{{ url_for('apikeys.apikeys_page') }}" class="settings-button" title="API Keys">
                 <span style="font-size: 20px;">🔑</span>
             </a>

@@ -1,5 +1,5 @@
 name: InkyPi NeoFrame
-version: "0.2.0"
+version: "0.3.0"
 slug: inkypi_neoframe
 description: InkyPi image playlists with packed Spectra-6 frames for NeoFrame firmware
 arch:

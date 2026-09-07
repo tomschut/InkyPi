@@ -7,6 +7,8 @@ This fork of [InkyPi](https://github.com/fatihak/InkyPi) adds a `neoframe` displ
 - `src/display/display_manager.py` — registers `NeoFrameDisplay` for `display_type: "neoframe"`
 - `src/inkypi.py` — registers `frame_bp`
 - `src/blueprints/settings.py` / `src/templates/settings.html` — a **Panel Rotation** field on the Settings page, shown only for `display_type: "neoframe"`
+- `src/utils/ingress_proxy.py` — a small WSGI middleware making `url_for()` Ingress-aware (see the "Home Assistant OS" section below); `src/inkypi.py` wires it in unconditionally (a no-op outside Ingress)
+- `src/templates/inky.html` — a manual reload button, shown only when the page is actually being viewed through Ingress (no browser reload control in HA's sidebar/mobile companion app)
 
 Everything else is unmodified upstream InkyPi. `git diff upstream/main` shows the full extent of the changes.
 

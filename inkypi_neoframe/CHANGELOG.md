@@ -1,3 +1,9 @@
+# 0.3.0
+
+- Added a manual reload button to InkyPi's main page, shown only when
+  viewed through Home Assistant's Ingress sidebar/mobile companion app
+  (no browser reload control available there).
+
 # 0.2.0
 
 - Converted from a build-time clone-and-patch overlay of upstream InkyPi to

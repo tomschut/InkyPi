@@ -1,3 +1,12 @@
+# 0.4.0
+
+- Declared `aarch64` and `armv7` alongside `amd64` in config.yaml. Only
+  amd64 has actually been build-tested; no ARM hardware or emulation was
+  available to verify these before release. The main known risk is the
+  Dockerfile's `apt-get install chromium` step, whose ARM packaging in
+  Debian bookworm is unverified (particularly 32-bit armv7). Report back
+  the add-on's build log if installation fails on ARM.
+
 # 0.3.0
 
 - Added a manual reload button to InkyPi's main page, shown only when

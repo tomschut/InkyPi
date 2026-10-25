@@ -27,6 +27,14 @@ Repository installs update like any other add-on: **Check for updates** in the s
 
 The web UI is reachable both through Home Assistant's sidebar (Ingress, authenticated via your HA login) and directly on the configured LAN port (no HA login protection there — keep that port on your trusted LAN). The firmware's `/api/current_frame` polling always uses the direct port; it can't authenticate through Ingress. A small WSGI middleware (`src/utils/ingress_proxy.py`) rewrites InkyPi's root-relative `url_for()` links using Supervisor's `X-Ingress-Path` header so pages and assets resolve correctly under the sidebar panel.
 
+## Logs
+
+Settings → **Download Logs** returns the last 24 hours from `/data/logs/inkypi.log` (rotating, 4 × 2 MB).
+
+## Home Assistant dashboards on the frame
+
+Use the Screenshot plugin with **Home Assistant login** on. Create a long-lived access token in your HA profile (Security tab) and save it as `HOME_ASSISTANT_TOKEN` on InkyPi's API Keys page. Add `?kiosk` to the dashboard URL (needs the kiosk-mode plugin from HACS) to hide the header and sidebar.
+
 ## Scope and verification
 
 The add-on needs no hardware devices, privileged mode, host networking, Docker socket or Supervisor API access. It uses the default protection settings. It renders remotely for the ESP32; no display attaches to the HAOS host.

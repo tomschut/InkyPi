@@ -50,3 +50,43 @@ class TestPlaylist:
         assert playlist.is_active(current) == expected
         assert playlist.get_priority() == priority
         
+
+class TestPlaylistRotation:
+
+    def make_manager(self):
+        from datetime import datetime
+        from src.model import PlaylistManager, PluginInstance
+        def playlist(name, start, end, plugins):
+            p = Playlist(name, start, end)
+            p.plugins = [PluginInstance("clock", f"{name}-{i}", {}, {}) for i in range(plugins)]
+            return p
+        manager = PlaylistManager([
+            playlist("Allday", "00:00", "24:00", 2),
+            playlist("Morning", "08:00", "12:00", 1),
+            playlist("Empty", "09:00", "10:00", 0),
+        ])
+        return manager, datetime(2026, 10, 25, 9, 30)
+
+    def test_rotates_between_playlists_active_at_the_same_time(self):
+        manager, now = self.make_manager()
+        shown = []
+        for _ in range(4):
+            playlist = manager.determine_next_playlist(now)
+            manager.active_playlist = playlist.name
+            shown.append(playlist.name)
+        # shortest range first, then take turns; playlists without plugins are skipped
+        assert shown == ["Morning", "Allday", "Morning", "Allday"]
+
+    def test_active_playlist_stays_while_it_is_active(self):
+        manager, now = self.make_manager()
+        manager.active_playlist = "Allday"
+        assert manager.determine_active_playlist(now).name == "Allday"
+        manager.active_playlist = "Gone"
+        assert manager.determine_active_playlist(now).name == "Empty"
+
+    def test_single_active_playlist(self):
+        from datetime import datetime
+        manager, _ = self.make_manager()
+        evening = datetime(2026, 10, 25, 20, 0)
+        manager.active_playlist = "Allday"
+        assert manager.determine_next_playlist(evening).name == "Allday"

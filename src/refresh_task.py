@@ -172,9 +172,6 @@ class RefreshTask:
             return None, None
 
         playlist_manager.active_playlist = playlist.name
-        if not playlist.plugins:
-            logger.info(f"Active playlist '{playlist.name}' has no plugins.")
-            return None, None
 
         latest_refresh_dt = latest_refresh_info.get_refresh_datetime()
         plugin_cycle_interval = self.device_config.get_config("plugin_cycle_interval_seconds", default=3600)
@@ -184,6 +181,13 @@ class RefreshTask:
             latest_refresh_str = latest_refresh_dt.strftime('%Y-%m-%d %H:%M:%S') if latest_refresh_dt else "None"
             logger.info(f"Not time to update display. | latest_update: {latest_refresh_str} | plugin_cycle_interval: {plugin_cycle_interval}")
             return None, None
+
+        # Take turns between playlists that are active at the same time
+        playlist = playlist_manager.determine_next_playlist(current_dt)
+        if not playlist:
+            logger.info(f"Active playlist '{playlist_manager.active_playlist}' has no plugins.")
+            return None, None
+        playlist_manager.active_playlist = playlist.name
 
         plugin = playlist.get_next_plugin()
         logger.info(f"Determined next plugin. | active_playlist: {playlist.name} | plugin_instance: {plugin.name}")

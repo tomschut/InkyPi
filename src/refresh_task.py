@@ -28,6 +28,8 @@ class RefreshTask:
         self.refresh_event = threading.Event()
         self.refresh_event.set()
         self.refresh_result = {}
+        # Serializes manual updates; they share manual_update_request/refresh_result
+        self.manual_update_lock = threading.Lock()
 
     def start(self):
         """Starts the background thread for refreshing the display."""
@@ -136,16 +138,17 @@ class RefreshTask:
     def manual_update(self, refresh_action):
         """Manually triggers an update for the specified plugin id and plugin settings by notifying the background process."""
         if self.running:
-            with self.condition:
-                self.manual_update_request = refresh_action
-                self.refresh_result = {}
-                self.refresh_event.clear()
+            with self.manual_update_lock:
+                with self.condition:
+                    self.manual_update_request = refresh_action
+                    self.refresh_result = {}
+                    self.refresh_event.clear()
 
-                self.condition.notify_all()  # Wake the thread to process manual update
+                    self.condition.notify_all()  # Wake the thread to process manual update
 
-            self.refresh_event.wait()
-            if self.refresh_result.get("exception"):
-                raise self.refresh_result.get("exception")
+                self.refresh_event.wait()
+                if self.refresh_result.get("exception"):
+                    raise self.refresh_result.get("exception")
         else:
             logger.warning("Background refresh task is not running, unable to do a manual update")
 

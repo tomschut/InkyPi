@@ -119,6 +119,8 @@ if __name__ == '__main__':
             except:
                 pass  # Ignore if we can't get the IP
 
-        serve(app, host="0.0.0.0", port=PORT, threads=1)
+        # One thread keeps memory low on a Pi Zero, but a slow render (Update Now) then blocks every
+        # other request until it finishes. INKYPI_THREADS lets roomier hosts serve requests alongside it.
+        serve(app, host="0.0.0.0", port=PORT, threads=int(os.getenv("INKYPI_THREADS", "1")))
     finally:
         refresh_task.stop()

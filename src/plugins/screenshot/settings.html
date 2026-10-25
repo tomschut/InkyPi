@@ -4,14 +4,30 @@
 </div>
 
 <div class="form-group">
+    <label for="homeAssistant" class="form-label">Home Assistant login:</label>
+    <div class="toggle-container">
+        <input type="checkbox" id="homeAssistant" name="homeAssistant" class="toggle-checkbox" value="false"
+            onclick="this.value = this.checked ? 'true' : 'false'">
+        <label for="homeAssistant" class="toggle-label"></label>
+    </div>
+</div>
+
+<div class="form-group">
+    <span style="color: var(--text-primary);">Home Assistant login uses a long-lived access token stored as HOME_ASSISTANT_TOKEN on the API Keys page. Add <code>?kiosk</code> to the dashboard URL to hide the header and sidebar (needs the kiosk-mode plugin).</span>
+</div>
+
+<div class="form-group">
     <span style="color: var(--text-primary);">Warning: Do not run with untrusted URLs, as it may pose a security risk. This may also fail if the website takes too long to load.</span>
 </div>
 
 <script>
     // populate form values from plugin settings
-    document.addEventListener('DOMContentLoaded', () => {        
+    document.addEventListener('DOMContentLoaded', () => {
         if (loadPluginSettings) {
             document.getElementById('url').value = pluginSettings.url;
+            const homeAssistant = document.getElementById('homeAssistant');
+            homeAssistant.checked = pluginSettings.homeAssistant === 'true';
+            homeAssistant.value = homeAssistant.checked ? 'true' : 'false';
         }
     });
 </script>

@@ -7,6 +7,12 @@ import hashlib
 import tempfile
 import subprocess
 import shutil
+import base64
+import json
+import socket
+import time
+from urllib.parse import urlparse
+import websocket
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +162,8 @@ def take_screenshot(target, dimensions, timeout_ms=None):
 
         # Check if the process failed or the output file is missing
         if result.returncode != 0 or not os.path.exists(img_file_path):
-            logger.error(f"Failed to take screenshot (return code: {result.returncode})")
+            stderr = result.stderr.decode(errors="replace").strip()[-2000:]
+            logger.error(f"Failed to take screenshot (return code: {result.returncode})\n{stderr}")
             return None
 
         # Load the image using PIL
@@ -170,6 +177,89 @@ def take_screenshot(target, dimensions, timeout_ms=None):
         logger.error(f"Failed to take screenshot: {str(e)}")
 
     return image
+
+def take_screenshot_with_storage(url, dimensions, local_storage, settle_ms=8000, timeout_ms=40000):
+    """Screenshot a page that needs localStorage set before its scripts run (e.g. a Home Assistant login).
+
+    Drives Chromium over the DevTools protocol. Keys are only written on the origin of `url`,
+    so a redirect elsewhere never sees them.
+    """
+    browser = _find_chromium_binary()
+    if not browser:
+        logger.error("No Chromium-based browser found. Install chromium, chromium-headless-shell, or chrome.")
+        return None
+
+    origin = "{0.scheme}://{0.netloc}".format(urlparse(url))
+    seed = "".join(f"localStorage.setItem({json.dumps(k)}, {json.dumps(v)});" for k, v in local_storage.items())
+    script = f"if (location.origin === {json.dumps(origin)}) {{ {seed} }}"
+
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1]
+    profile_dir = tempfile.mkdtemp(prefix="inkypi-chromium-")
+    stderr_file = tempfile.TemporaryFile()
+    proc = subprocess.Popen([
+        browser, "--headless", f"--remote-debugging-port={port}", "--remote-allow-origins=*",
+        f"--user-data-dir={profile_dir}", f"--window-size={dimensions[0]},{dimensions[1]}",
+        "--disable-dev-shm-usage", "--disable-gpu", "--use-gl=swiftshader", "--hide-scrollbars",
+        "--disable-extensions", "--mute-audio", "--no-zygote", "--no-sandbox", "about:blank",
+    ], stdout=subprocess.DEVNULL, stderr=stderr_file)
+    ws = None
+    try:
+        deadline = time.monotonic() + timeout_ms / 1000
+        page = None
+        while page is None:
+            if proc.poll() is not None or time.monotonic() > deadline:
+                raise RuntimeError("Chromium DevTools did not start")
+            try:
+                targets = requests.get(f"http://127.0.0.1:{port}/json/list", timeout=2).json()
+                page = next((t for t in targets if t.get("type") == "page"), None)
+            except requests.RequestException:
+                pass
+            if page is None:
+                time.sleep(0.2)
+
+        ws = websocket.create_connection(page["webSocketDebuggerUrl"], timeout=timeout_ms / 1000)
+        next_id = iter(range(1, 1_000_000))
+
+        def send(method, params=None):
+            msg_id = next(next_id)
+            ws.send(json.dumps({"id": msg_id, "method": method, "params": params or {}}))
+            return msg_id
+
+        def wait_for(predicate):
+            while time.monotonic() < deadline:
+                msg = json.loads(ws.recv())
+                if predicate(msg):
+                    return msg
+            raise RuntimeError(f"Timed out after {timeout_ms} ms loading {url}")
+
+        send("Page.enable")
+        send("Emulation.setDeviceMetricsOverride", {"width": dimensions[0], "height": dimensions[1], "deviceScaleFactor": 1, "mobile": False})
+        send("Page.addScriptToEvaluateOnNewDocument", {"source": script})
+        nav_id = send("Page.navigate", {"url": url})
+        nav = wait_for(lambda m: m.get("id") == nav_id)
+        if nav.get("result", {}).get("errorText"):
+            raise RuntimeError(f"Navigation to {url} failed: {nav['result']['errorText']}")
+        wait_for(lambda m: m.get("method") == "Page.loadEventFired")
+        # Single-page apps such as Home Assistant keep rendering after the load event
+        time.sleep(settle_ms / 1000)
+        shot_id = send("Page.captureScreenshot", {"format": "png"})
+        shot = wait_for(lambda m: m.get("id") == shot_id)
+        with Image.open(BytesIO(base64.b64decode(shot["result"]["data"]))) as img:
+            return img.copy()
+    except Exception as e:
+        stderr_file.seek(0)
+        stderr = stderr_file.read().decode(errors="replace").strip()[-2000:]
+        logger.error(f"Failed to take screenshot of {url}: {e}\n{stderr}".rstrip())
+        return None
+    finally:
+        if ws:
+            ws.close()
+        proc.kill()
+        proc.wait()
+        stderr_file.close()
+        shutil.rmtree(profile_dir, ignore_errors=True)
 
 def pad_image_blur(img: Image, dimensions: tuple[int, int]) -> Image:
     bkg = ImageOps.fit(img, dimensions)

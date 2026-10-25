@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app, render_template, Response
 from utils.time_utils import calculate_seconds
+from utils.log_file import LOG_FILE, read_logs_since
 from datetime import datetime, timedelta
 import os
 import pytz
@@ -108,10 +109,12 @@ def download_logs():
         since = datetime.now() - timedelta(hours=hours)
 
         if not JOURNAL_AVAILABLE:
-            # Return a message when running in development mode without systemd
-            buffer.write(f"Log download not available in development mode (cysystemd not installed).\n")
-            buffer.write(f"Logs would normally show InkyPi service logs from the last {hours} hours.\n")
-            buffer.write(f"\nTo see Flask development logs, check your terminal output.\n")
+            # No systemd journal (Docker / HAOS add-on): read InkyPi's own log file
+            lines = read_logs_since(since)
+            if lines:
+                buffer.writelines(lines)
+            else:
+                buffer.write(f"No log lines from the last {hours} hours in {LOG_FILE}.\n")
         else:
             reader = JournalReader()
             reader.open(JournalOpenMode.SYSTEM)

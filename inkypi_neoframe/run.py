@@ -32,5 +32,7 @@ def prepare(app=Path('/app'), data=Path('/data')):
 
 if __name__ == '__main__':
     prepare()
+    # Keep logs across add-on restarts so "Download Logs" can show what happened before a crash
+    os.environ.setdefault('INKYPI_LOG_FILE', '/data/logs/inkypi.log')
     os.chdir('/app')
     os.execv(sys.executable, [sys.executable, 'src/inkypi.py'])

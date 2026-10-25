@@ -183,3 +183,6 @@ artifacts/
 !/dist/
 /dist/*
 !dist/inkypi-neoframe-haos.tar.gz
+
+# InkyPi runtime log file
+logs/
